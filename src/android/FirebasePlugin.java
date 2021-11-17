@@ -8,11 +8,12 @@ import android.os.Bundle;
 import android.net.Uri;
 //import androidx.annotation.NonNull;
 //import androidx.core.app.NotificationManagerCompat;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+
+import androidx.core.app.NotificationManagerCompat;
+
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -805,9 +806,14 @@ public class FirebasePlugin extends CordovaPlugin {
     cordova.getThreadPool().execute(new Runnable() {
       public void run() {
         try {
-          final boolean activated = FirebaseRemoteConfig.getInstance().activateFetched();
-          Log.d(TAG, "activateFetched success. activated: " + String.valueOf(activated));
-          callbackContext.success(String.valueOf(activated));
+          FirebaseRemoteConfig.getInstance().activate().addOnSuccessListener(activated -> {
+
+            Log.d(TAG, "activateFetched success. activated: " + String.valueOf(activated));
+            callbackContext.success(String.valueOf(activated));
+          }).addOnFailureListener(e -> {
+            Crashlytics.logException(e);
+            callbackContext.error(e.getMessage());
+          });
         } catch (Exception e) {
           Crashlytics.logException(e);
           callbackContext.error(e.getMessage());
@@ -855,10 +861,10 @@ public class FirebasePlugin extends CordovaPlugin {
     cordova.getThreadPool().execute(new Runnable() {
       public void run() {
         try {
-          byte[] bytes = FirebaseRemoteConfig.getInstance().getByteArray(key);
+          //byte[] bytes = FirebaseRemoteConfig.getInstance().getByteArray(key);
           JSONObject object = new JSONObject();
-          object.put("base64", Base64.encodeToString(bytes, Base64.DEFAULT));
-          object.put("array", new JSONArray(bytes));
+          //object.put("base64", Base64.encodeToString(bytes, Base64.DEFAULT));
+          //object.put("array", new JSONArray(bytes));
           callbackContext.success(object);
         } catch (Exception e) {
           Crashlytics.logException(e);
@@ -892,7 +898,7 @@ public class FirebasePlugin extends CordovaPlugin {
           JSONObject info = new JSONObject();
 
           JSONObject settings = new JSONObject();
-          settings.put("developerModeEnabled", remoteConfigInfo.getConfigSettings().isDeveloperModeEnabled());
+          settings.put("minimumFetchIntervalInSeconds", remoteConfigInfo.getConfigSettings().getMinimumFetchIntervalInSeconds());
           info.put("configSettings", settings);
 
           info.put("fetchTimeMillis", remoteConfigInfo.getFetchTimeMillis());
@@ -911,10 +917,10 @@ public class FirebasePlugin extends CordovaPlugin {
     cordova.getThreadPool().execute(new Runnable() {
       public void run() {
         try {
-          boolean devMode = config.getBoolean("developerModeEnabled");
+          int minimumFetchIntervalInSeconds = config.getInt("minimumFetchIntervalInSeconds");
           FirebaseRemoteConfigSettings.Builder settings = new FirebaseRemoteConfigSettings.Builder()
-              .setDeveloperModeEnabled(devMode);
-          FirebaseRemoteConfig.getInstance().setConfigSettings(settings.build());
+              .setMinimumFetchIntervalInSeconds(minimumFetchIntervalInSeconds);
+          FirebaseRemoteConfig.getInstance().setConfigSettingsAsync(settings.build());
           callbackContext.success();
         } catch (Exception e) {
           Crashlytics.logException(e);
@@ -928,7 +934,7 @@ public class FirebasePlugin extends CordovaPlugin {
     cordova.getThreadPool().execute(new Runnable() {
       public void run() {
         try {
-          FirebaseRemoteConfig.getInstance().setDefaults(defaultsToMap(defaults));
+          FirebaseRemoteConfig.getInstance().setDefaultsAsync(defaultsToMap(defaults));
           callbackContext.success();
         } catch (Exception e) {
           Crashlytics.logException(e);
