@@ -15,7 +15,8 @@
   </js-module>
 
   <hook type="before_plugin_install" src="scripts/configurations/installDependencies.js" />
-  <hook type="before_plugin_install" src="scripts/configurations/unzipAndCopyConfigurations.js" />
+
+  <dependency id="cordova-outsystems-firebase-core" url="https://github.com/OutSystems/cordova-outsystems-firebase-core.git#1.0.0"/>
 
   <preference name="APP_DOMAIN" default="/" />
   <preference name="APP_PATH" default="/" />
@@ -61,7 +62,6 @@
       <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="@string/default_notification_channel_id"/>
     </config-file>
 
-    <resource-file src="google-services.json" target="./google-services.json" />
     <resource-file src="src/android/cordova-plugin-firebase-strings.xml" target="res/values/cordova-plugin-firebase-strings.xml" />
     <resource-file src="src/android/cordova-plugin-firebase-colors.xml" target="res/values/cordova-plugin-firebase-colors.xml" />
 
@@ -99,8 +99,6 @@
       <string>production</string>
     </config-file>
 
-    <resource-file src="GoogleService-Info.plist" target="./GoogleService-Info.plist" />
-
     <header-file src="src/ios/AppDelegate+FirebasePlugin.h" />
     <source-file src="src/ios/AppDelegate+FirebasePlugin.m" />
     <header-file src="src/ios/FirebasePlugin.h" />
@@ -108,8 +106,8 @@
 
 <!--     <framework src="Fabric" type="podspec" spec="~> 1.9" />
     <framework src="Crashlytics" type="podspec" spec="~> 3.12" /> -->
-    <framework src="FirebaseAnalytics" type="podspec" spec="~> 4.2" />
-    <framework src="FirebaseMessaging" type="podspec" spec="~> 2.2" />
+    <framework src="FirebaseAnalytics" type="podspec" spec="~> 7.0" />
+    <framework src="FirebaseMessaging" type="podspec" spec="~> 7.0" />
    <!--  <framework src="FirebaseAuth" type="podspec" spec="~> 4.6.1" />
     <framework src="FirebaseRemoteConfig" type="podspec" spec="~> 2.1.3" />
     <framework src="FirebasePerformance" type="podspec" spec="~> 1.1.3" />
