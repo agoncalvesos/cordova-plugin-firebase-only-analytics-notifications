@@ -19,70 +19,14 @@ function readRootBuildGradle() {
  * Added a dependency on 'com.google.gms' based on the position of the know 'com.android.tools.build' dependency in the build.gradle
  */
 function addDependencies(buildGradle, context) {
-  // find the known line to match
-  var match = buildGradle.match(/^(\s*)classpath 'com.android.tools.build(.*)/m);
-  var whitespace = match[1];
   
-  // modify the line to add the necessary dependencies
-  var sdk = utils.getAndroidTargetSdk(context);
-  var googlePlayDependency;
-  var fabricDependency;
-  if (sdk >= 28) {
-    googlePlayDependency = whitespace + 'classpath \'com.google.gms:google-services:4.3.3\' // google-services dependency from cordova-plugin-firebase';
-    fabricDependency = whitespace + 'classpath \'io.fabric.tools:gradle:1.31.2\' // fabric dependency from cordova-plugin-firebase'
-  } else {
-    googlePlayDependency = whitespace + 'classpath \'com.google.gms:google-services:4.1.0\' // google-services dependency from cordova-plugin-firebase';
-    fabricDependency = whitespace + 'classpath \'io.fabric.tools:gradle:1.25.4\' // fabric dependency from cordova-plugin-firebase'
-  }
-
-  var modifiedLine = match[0] + '\n' + googlePlayDependency + '\n' + fabricDependency;
-  
-  // modify the actual line
-  return buildGradle.replace(/^(\s*)classpath 'com.android.tools.build(.*)/m, modifiedLine);
-}
-
-/*
- * Add 'google()' and Crashlytics to the repository repo list
- */
-function addRepos(buildGradle) {
-  // find the known line to match
-  var match = buildGradle.match(/^(\s*)jcenter\(\)/m);
-  var whitespace = match[1];
-
-  // modify the line to add the necessary repo
-  // Crashlytics goes under buildscripts which is the first grouping in the file
-  var fabricMavenRepo = whitespace + 'maven { url \'https://maven.fabric.io/public\' } // Fabrics Maven repository from cordova-plugin-firebase'
-  var modifiedLine = match[0] + '\n' + fabricMavenRepo;
-
-  // modify the actual line
-  buildGradle = buildGradle.replace(/^(\s*)jcenter\(\)/m, modifiedLine);
-
-  // update the all projects grouping
-  var allProjectsIndex = buildGradle.indexOf('allprojects');
-  if (allProjectsIndex > 0) {
-    // split the string on allprojects because jcenter is in both groups and we need to modify the 2nd instance
-    var firstHalfOfFile = buildGradle.substring(0, allProjectsIndex);
-    var secondHalfOfFile = buildGradle.substring(allProjectsIndex);
-
-    // Add google() to the allprojects section of the string
-    match = secondHalfOfFile.match(/^(\s*)jcenter\(\)/m);
-    var googlesMavenRepo = whitespace + 'google() // Google\'s Maven repository from cordova-plugin-firebase';
-    modifiedLine = match[0] + '\n' + googlesMavenRepo;
-    // modify the part of the string that is after 'allprojects'
-    secondHalfOfFile = secondHalfOfFile.replace(/^(\s*)jcenter\(\)/m, modifiedLine);
-
-    // recombine the modified line
-    buildGradle = firstHalfOfFile + secondHalfOfFile;
-  } else {
-    // this should not happen, but if it does, we should try to add the dependency to the buildscript
-    match = buildGradle.match(/^(\s*)jcenter\(\)/m);
-    var googlesMavenRepo = whitespace + 'google() // Google\'s Maven repository from cordova-plugin-firebase';
-    modifiedLine = match[0] + '\n' + googlesMavenRepo;
-    // modify the part of the string that is after 'allprojects'
-    buildGradle = buildGradle.replace(/^(\s*)jcenter\(\)/m, modifiedLine);
-  }
-
-  return buildGradle;
+  // find and modify the actual line
+  return buildGradle.replace(/([\S|\s]*)(classpath[\S|\s]*)/m, (match,g1,g2)=>{
+    // modify the line to add the necessary dependencies
+    let googlePlayDependency = 'classpath \'com.google.gms:google-services:4.3.10\' // google-services dependency from cordova-plugin-firebase';
+    let fabricDependency = ' classpath \'com.google.firebase:firebase-crashlytics-gradle:2.3.0\' // crashlytics dependency from cordova-plugin-firebase'
+    return g1 + googlePlayDependency + '\n\t\t' + fabricDependency + '\n\t\t' + g2
+  });
 }
 
 /*
@@ -106,13 +50,10 @@ module.exports = {
     // Add Google Play Services Dependency
     buildGradle = addDependencies(buildGradle, context);
   
-    // Add Google's Maven Repo
-    buildGradle = addRepos(buildGradle);
-
     writeRootBuildGradle(buildGradle);
   },
 
-  restoreRootBuildGradle: function() {
+  restoreRootBuildGradle: function(context) {
     // be defensive and don't crash if the file doesn't exist
     if (!rootBuildGradleExists) {
       return;

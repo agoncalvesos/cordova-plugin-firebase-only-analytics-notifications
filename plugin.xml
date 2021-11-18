@@ -22,7 +22,7 @@
   <preference name="APP_PATH" default="/" />
 
   <platform name="android">
-    <hook type="after_plugin_install" src="scripts/crashlytics/android/after_plugin_install.js" />
+    <hook type="before_prepare" src="scripts/crashlytics/android/after_plugin_install.js" />
     <hook type="before_plugin_uninstall" src="scripts/crashlytics/android/before_plugin_uninstall.js" />
     <hook type="before_plugin_install" src="scripts/configurations/unzipAndCopySound.js" />
 
@@ -51,7 +51,7 @@
       </intent-filter>
     </config-file>
     <config-file target="AndroidManifest.xml" parent="/manifest/application">
-      <service android:name="org.apache.cordova.firebase.FirebasePluginMessagingService" android:stopWithTask="false">
+      <service android:name="org.apache.cordova.firebase.FirebasePluginMessagingService" android:stopWithTask="false" android:exported="true">
         <intent-filter>
           <action android:name="com.google.firebase.MESSAGING_EVENT"/>
         </intent-filter>
