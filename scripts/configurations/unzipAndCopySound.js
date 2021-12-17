@@ -29,6 +29,7 @@ module.exports = function(context) {
   var soundZipFile = utils.getZipFile(wwwPath, constants.pushSound);
   if (!soundZipFile) {
     console.log("No zip file found containing sound files");
+    defer.resolve();
     return;
   }
 
@@ -42,7 +43,8 @@ module.exports = function(context) {
 
   if (!soundFile) {
     console.log("No sound file found");
-    return defer.promise;
+    defer.resolve();
+    return;
   }
   
   var destFolder = platformConfig.getSoundDestinationFolder(context);
